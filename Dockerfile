@@ -1,8 +1,12 @@
 # Stage 1: Composer dependencies
-FROM composer:2 as composer
+FROM php:8.2-cli-alpine as composer
 
-# Install PHP extensions required for composer install
-RUN apk add --no-cache php8-bcmath php8-soap
+# Install system dependencies and PHP extensions for composer install
+RUN apk add --no-cache git unzip icu-dev libzip-dev oniguruma-dev \
+    && docker-php-ext-install intl zip bcmath soap
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 COPY composer.json composer.lock ./
@@ -11,13 +15,11 @@ RUN composer install --no-dev --optimize-autoloader
 # Stage 2: Production image
 FROM php:8.2-fpm-alpine
 
-# Install system dependencies and required PHP extensions
+# Install system dependencies and PHP extensions
 RUN apk add --no-cache \
     nginx supervisor bash icu-dev libzip-dev libpng-dev \
     jpegoptim optipng pngquant gifsicle unzip git oniguruma-dev \
-    bcmath soap
-
-RUN docker-php-ext-install pdo_mysql intl zip bcmath soap
+    && docker-php-ext-install pdo_mysql intl zip bcmath soap
 
 WORKDIR /var/www/html
 COPY --from=composer /app /var/www/html
