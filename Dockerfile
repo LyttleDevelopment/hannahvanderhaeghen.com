@@ -2,7 +2,7 @@
 FROM php:8.2-cli-alpine as composer
 
 # Install system dependencies and PHP extensions for composer install
-RUN apk add --no-cache git unzip icu-dev libzip-dev oniguruma-dev \
+RUN apk add --no-cache git unzip icu-dev libzip-dev oniguruma-dev libxml2-dev \
     && docker-php-ext-install intl zip bcmath soap
 
 # Install Composer
@@ -18,7 +18,7 @@ FROM php:8.2-fpm-alpine
 # Install system dependencies and PHP extensions
 RUN apk add --no-cache \
     nginx supervisor bash icu-dev libzip-dev libpng-dev \
-    jpegoptim optipng pngquant gifsicle unzip git oniguruma-dev \
+    jpegoptim optipng pngquant gifsicle unzip git oniguruma-dev libxml2-dev \
     && docker-php-ext-install pdo_mysql intl zip bcmath soap
 
 WORKDIR /var/www/html
