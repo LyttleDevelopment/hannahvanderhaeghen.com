@@ -1,16 +1,27 @@
 # Stage 1: Composer dependencies
 FROM composer:2 as composer
 
+# Install PHP extensions required for composer install
+RUN apk add --no-cache php8-bcmath php8-soap
+
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader
 
-# Stage 2: Build assets (optional, if you use npm/yarn)
-# FROM node:20 as assets
-# WORKDIR /app
-# COPY package*.json ./
-# RUN npm install && npm run build
-# COPY . .
+# Stage 2: Production image
+FROM php:8.2-fpm-alpine
+
+# Install system dependencies and required PHP extensions
+RUN apk add --no-cache \
+    nginx supervisor bash icu-dev libzip-dev libpng-dev \
+    jpegoptim optipng pngquant gifsicle unzip git oniguruma-dev \
+    bcmath soap
+
+RUN docker-php-ext-install pdo_mysql intl zip bcmath soap
+
+WORKDIR /var/www/html
+COPY --from=composer /app /var/www/html
+COPY . /var/www/html
 
 # Stage 3: Production image
 FROM php:8.2-fpm-alpine
